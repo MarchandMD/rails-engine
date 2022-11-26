@@ -47,3 +47,11 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem "simplecov", "~> 0.21.2", :groups => [:development, :test]
 
 gem "rspec-rails", "~> 5.1"
+
+gem "factory_bot_rails", "~> 6.2"
+
+gem "shoulda-matchers", "~> 5.2", :groups => [:development, :test]
+
+gem "database_cleaner", "~> 2.0", :groups => [:development, :test]
+
+gem "faker", "~> 3.0", :groups => [:development, :test]
