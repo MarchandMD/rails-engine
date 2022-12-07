@@ -55,3 +55,7 @@ gem "shoulda-matchers", "~> 5.2", :groups => [:development, :test]
 gem "database_cleaner", "~> 2.0", :groups => [:development, :test]
 
 gem "faker", "~> 3.0", :groups => [:development, :test]
+
+gem "jsonapi-serializer", "~> 2.2"
+
+gem "pry-rails", "~> 0.3.9"
