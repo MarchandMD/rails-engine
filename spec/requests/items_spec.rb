@@ -68,87 +68,102 @@ RSpec.describe "Items", type: :request do
       expect(single_item[:data][:attributes][:merchant_id]).to be_an Integer
     end
 
-    it 'can create an item: happy path' do
-      # happy path, a valid merchant_id is required
-      merchant_id = create(:merchant).id
+    context "when attempting to create an item" do
+      it 'has a happy path' do
+        # happy path, a valid merchant_id is required
+        merchant_id = create(:merchant).id
 
-      # content to be converted to JSON and sent via post request
-      item_params = {
-        "name": "value1",
-        "description": "value2",
-        "unit_price": 100.99,
-        "merchant_id": merchant_id
-      }
-      expect(merchant_id).to be_an Integer
+        # content to be converted to JSON and sent via post request
+        item_params = {
+          "name": "value1",
+          "description": "value2",
+          "unit_price": 100.99,
+          "merchant_id": merchant_id
+        }
+        expect(merchant_id).to be_an Integer
 
-      # valid headers to comply with JSON configurations
-      headers = { "CONTENT_TYPE" => 'application/json' }
+        # valid headers to comply with JSON configurations
+        headers = { "CONTENT_TYPE" => 'application/json' }
 
-      # the actual post request using above information
-      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+        # the actual post request using above information
+        post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
 
-      # confirm last item equal to data sent
-      created_item = Item.last
+        # confirm last item equal to data sent
+        created_item = Item.last
 
-      expect(response).to be_successful
-      expect(created_item.name).to eq(item_params[:name])
-      expect(created_item.description).to eq(item_params[:description])
-      expect(created_item.unit_price).to eq(item_params[:unit_price])
-      expect(created_item.merchant_id).to eq(item_params[:merchant_id])
+        expect(response).to be_successful
+        expect(created_item.name).to eq(item_params[:name])
+        expect(created_item.description).to eq(item_params[:description])
+        expect(created_item.unit_price).to eq(item_params[:unit_price])
+        expect(created_item.merchant_id).to eq(item_params[:merchant_id])
+      end
+
+      xit 'has a sad path' do
+        # happy path, a valid merchant_id is required
+        merchant_id = create(:merchant).id
+
+        # content to be converted to JSON and sent via post request
+        item_params = {
+          "name": "value1",
+          "description": "value2",
+          "merchant_id": merchant_id
+        }
+        expect(merchant_id).to be_an Integer
+
+        # valid headers to comply with JSON configurations
+        headers = { "CONTENT_TYPE" => 'application/json' }
+
+        # the actual post request using above information
+        post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+        expect { response }.to raise_error
+      end
+
+      xit 'ignores attributes sent by the user which are not allowed' do
+      end
     end
 
-    xit 'can create an item: sad path' do
-      # happy path, a valid merchant_id is required
-      merchant_id = create(:merchant).id
+    context "when updating an item" do
+      it 'has a happy path' do
+        merchant_id = create(:merchant).id
+        id = create(:item, merchant_id: merchant_id).id
 
-      # content to be converted to JSON and sent via post request
-      item_params = {
-        "name": "value1",
-        "description": "value2",
-        "merchant_id": merchant_id
-      }
-      expect(merchant_id).to be_an Integer
+        previous_item_name = Item.last.name
+        item_params = { "name": "patched name" }
+        headers = { "CONTENT_TYPE" => 'application/json' }
 
-      # valid headers to comply with JSON configurations
-      headers = { "CONTENT_TYPE" => 'application/json' }
+        patch "/api/v1/items/#{id}", headers: headers, params: JSON.generate({ item: item_params })
 
-      # the actual post request using above information
-      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+        item = Item.find_by(id: id)
 
-      expect { response }.to raise_error
+        expect(response).to be_successful
+        expect(item.name).not_to eq(previous_item_name)
+        expect(item.name).to eq("patched name")
+      end
+
+      xit 'has a sad path' do
+      end
     end
 
-    it 'can update a item: happy path' do
-      merchant_id = create(:merchant).id
-      id = create(:item, merchant_id: merchant_id).id
+    context "when destroying an item" do
+      it 'has a happy path' do
+        merchant_id = create(:merchant).id
+        item = create(:item, merchant_id: merchant_id)
 
-      previous_item_name = Item.last.name
-      item_params = { "name": "patched name" }
-      headers = { "CONTENT_TYPE" => 'application/json' }
+        expect(Item.count).to eq(1)
 
-      patch "/api/v1/items/#{id}", headers: headers, params: JSON.generate({ item: item_params })
+        delete "/api/v1/items/#{item.id}"
 
-      item = Item.find_by(id: id)
+        expect(response).to be_successful
+        expect(Item.count).to eq(0)
+        expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      end
 
-      expect(response).to be_successful
-      expect(item.name).not_to eq(previous_item_name)
-      expect(item.name).to eq("patched name")
-    end
+      xit 'has a sad path' do
+      end
 
-    xit 'can update a item: sad path' do
-    end
-
-    it 'can destroy a item' do
-      merchant_id = create(:merchant).id
-      item = create(:item, merchant_id: merchant_id)
-
-      expect(Item.count).to eq(1)
-
-      delete "/api/v1/items/#{item.id}"
-
-      expect(response).to be_successful
-      expect(Item.count).to eq(0)
-      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      xit 'destroys any invoice if this was the only item on the invoice' do
+      end
     end
   end
 
