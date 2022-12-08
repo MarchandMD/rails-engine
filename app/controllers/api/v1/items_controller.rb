@@ -22,7 +22,10 @@ class Api::V1::ItemsController < ApplicationController
   end
 
   def destroy
-    render json: Item.delete(params[:id])
+    item = Item.find(params[:id])
+    return unless item
+
+    item.destroy
   end
 
   private

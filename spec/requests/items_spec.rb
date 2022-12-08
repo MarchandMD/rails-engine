@@ -184,4 +184,63 @@ RSpec.describe "Items", type: :request do
       end
     end
   end
+
+  describe 'non-RESTful endpoint' do
+    it 'can find all based on search criteria' do
+      id = create(:merchant).id
+      id2 = create(:merchant).id
+      ring_of_gold = create(:item, name: 'Ring of Gold', merchant_id: id)
+      silver_ring = create(:item, name: 'Silver Ring', merchant_id: id2)
+      lunchbox = create(:item, name: 'lunchbox', merchant_id: id)
+
+      get "/api/v1/items/find_all?name=ring"
+
+      expect(response).to be_successful
+
+      items = JSON.parse(response.body, symbolize_names: true)
+
+      expect(items[:data].count).to eq(2)
+      expect(items).to have_key(:data)
+
+      expect(items[:data][0]).to have_key(:id)
+      expect(items[:data][0][:id]).to eq("#{ring_of_gold.id}")
+
+      expect(items[:data][0]).to have_key(:type)
+      expect(items[:data][0][:type]).to eq('item')
+
+      expect(items[:data][0]).to have_key(:attributes)
+
+      expect(items[:data][0][:attributes]).to have_key(:name)
+      expect(items[:data][0][:attributes][:name]).to eq(ring_of_gold.name)
+
+      expect(items[:data][0][:attributes]).to have_key(:description)
+      expect(items[:data][0][:attributes][:description]).to eq(ring_of_gold.description)
+
+      expect(items[:data][0][:attributes]).to have_key(:unit_price)
+      expect(items[:data][0][:attributes][:unit_price]).to eq(ring_of_gold.unit_price)
+
+      expect(items[:data][0][:attributes]).to have_key(:merchant_id)
+      expect(items[:data][0][:attributes][:merchant_id]).to eq(ring_of_gold.merchant_id)
+
+      expect(items[:data][1]).to have_key(:id)
+      expect(items[:data][1][:id]).to eq("#{silver_ring.id}")
+
+      expect(items[:data][1]).to have_key(:type)
+      expect(items[:data][1][:type]).to eq('item')
+
+      expect(items[:data][1]).to have_key(:attributes)
+
+      expect(items[:data][1][:attributes]).to have_key(:name)
+      expect(items[:data][1][:attributes][:name]).to eq(silver_ring.name)
+
+      expect(items[:data][1][:attributes]).to have_key(:description)
+      expect(items[:data][1][:attributes][:description]).to eq(silver_ring.description)
+
+      expect(items[:data][1][:attributes]).to have_key(:unit_price)
+      expect(items[:data][1][:attributes][:unit_price]).to eq(silver_ring.unit_price)
+
+      expect(items[:data][1][:attributes]).to have_key(:merchant_id)
+      expect(items[:data][1][:attributes][:merchant_id]).to eq(silver_ring.merchant_id)
+    end
+  end
 end
