@@ -27,6 +27,7 @@ class Api::V1::ItemsController < ApplicationController
     if item.update(item_params)
       render json: ItemSerializer.new(item), status: :created
     else
+      # not being covered by tests
       render json: { "error": "not found" }, status: 404
     end
   end
