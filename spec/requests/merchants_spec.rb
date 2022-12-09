@@ -101,35 +101,53 @@ RSpec.describe 'Merchants', type: :request do
       expect(merchant_response[:data][:attributes][:name]).to eq(merchant.name)
     end
 
-    xit 'has a sad path' do
+    it 'has a sad path' do
+
     end
   end
 
   context "non-RESTful route" do
-    it 'can find based on search criteria' do
-      create(:merchant, name: 'Turing')
-      f_mart = create(:merchant, name: 'Ring World')
+    describe 'happy path' do
+      it 'can find based on search criteria' do
+        create(:merchant, name: 'Turing')
+        f_mart = create(:merchant, name: 'Ring World')
 
-      get "/api/v1/merchants/find?name=ring"
+        get "/api/v1/merchants/find?name=ring"
 
-      expect(response).to be_successful
+        expect(response).to be_successful
 
-      merchant = JSON.parse(response.body, symbolize_names: true)
-      expect(merchant.count).to eq(1)
-      expect(merchant).to have_key(:data)
+        merchant = JSON.parse(response.body, symbolize_names: true)
+        expect(merchant.count).to eq(1)
+        expect(merchant).to have_key(:data)
 
-      expect(merchant[:data]).to have_key(:id)
-      expect(merchant[:data][:id]).to eq("#{f_mart.id}")
+        expect(merchant[:data]).to have_key(:id)
+        expect(merchant[:data][:id]).to eq("#{f_mart.id}")
 
-      expect(merchant[:data]).to have_key(:type)
-      expect(merchant[:data][:type]).to eq('merchant')
+        expect(merchant[:data]).to have_key(:type)
+        expect(merchant[:data][:type]).to eq('merchant')
 
-      expect(merchant[:data]).to have_key(:attributes)
+        expect(merchant[:data]).to have_key(:attributes)
 
-      expect(merchant[:data][:attributes]).to have_key(:name)
-      expect(merchant[:data][:attributes][:name]).to eq('Ring World')
+        expect(merchant[:data][:attributes]).to have_key(:name)
+        expect(merchant[:data][:attributes][:name]).to eq('Ring World')
+      end
     end
 
-  end
+    describe 'sad path' do
+      it 'doesnt send a fragment if no match' do
+        create(:merchant, name: 'Turing')
+        create(:merchant, name: 'Ring World')
 
+        get "/api/v1/merchants/find?name=abc"
+
+        expect(response).to be_successful
+
+        merchant = JSON.parse(response.body, symbolize_names: true)
+
+        expect(merchant).to have_key(:data)
+
+        expect(merchant[:data]).to have_key(:error)
+      end
+    end
+  end
 end

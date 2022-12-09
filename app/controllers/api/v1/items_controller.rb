@@ -13,12 +13,22 @@ class Api::V1::ItemsController < ApplicationController
   end
 
   def create
-    Item.create(item_params)
-    render json: ItemSerializer.new(Item.last)
+    item = Item.new(item_params)
+
+    if item.save
+      render json: ItemSerializer.new(Item.last), status: 201
+    else
+      render json: { "error": "incomplete submission" }, status: :not_found
+    end
   end
 
   def update
-    render json: ItemSerializer.new(Item.update(item_params))
+    item = Item.find(params[:id])
+    if item.update(item_params)
+      render json: ItemSerializer.new(item), status: :created
+    else
+      render json: { "error": "not found" }, status: 404
+    end
   end
 
   def destroy

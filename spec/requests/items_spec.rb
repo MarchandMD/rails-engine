@@ -98,11 +98,10 @@ RSpec.describe "Items", type: :request do
         expect(created_item.merchant_id).to eq(item_params[:merchant_id])
       end
 
-      xit 'has a sad path' do
-        # happy path, a valid merchant_id is required
+      it 'has a sad path' do
         merchant_id = create(:merchant).id
 
-        # content to be converted to JSON and sent via post request
+        # missing unit_price; expect rejection
         item_params = {
           "name": "value1",
           "description": "value2",
@@ -113,13 +112,47 @@ RSpec.describe "Items", type: :request do
         # valid headers to comply with JSON configurations
         headers = { "CONTENT_TYPE" => 'application/json' }
 
+        # the actual post request using above information, expected rejection
+        post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+        message = JSON.parse(response.body, symbolize_names: true)
+
+        expect(message).to have_key(:error)
+        expect(message[:error]).to eq('incomplete submission')
+      end
+
+      it 'ignores attributes sent by the user which are not allowed' do
+        # valid merchant_id is required
+        merchant_id = create(:merchant).id
+
+        # content to be converted to JSON and sent via post request, with additional param
+        item_params = {
+          "name": "ignore",
+          "description": "the not allowed",
+          "unit_price": 100.99,
+          "merchant_id": merchant_id,
+          "foo_param": "not expected"
+        }
+        expect(merchant_id).to be_an Integer
+
+        # valid headers to comply with JSON configurations
+        headers = { "CONTENT_TYPE" => 'application/json' }
+
         # the actual post request using above information
         post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
 
-        expect { response }.to raise_error
-      end
+        # confirm last item equal to data sent
+        created_item = Item.last
 
-      xit 'ignores attributes sent by the user which are not allowed' do
+        expect(response).to be_successful
+        expect(created_item.name).to eq(item_params[:name])
+        expect(created_item.description).to eq(item_params[:description])
+        expect(created_item.unit_price).to eq(item_params[:unit_price])
+        expect(created_item.merchant_id).to eq(item_params[:merchant_id])
+
+        message = JSON.parse(response.body, symbolize_names: true)
+
+        expect(message[:data][:attributes]).not_to have_key(:foo_param)
       end
     end
 
@@ -141,7 +174,16 @@ RSpec.describe "Items", type: :request do
         expect(item.name).to eq("patched name")
       end
 
-      xit 'has a sad path' do
+      it 'has a sad path' do
+        merchant_id = create(:merchant).id
+        id = create(:item, merchant_id: merchant_id).id
+        item_params = { "name": "patched name" }
+
+        headers = { "CONTENT_TYPE" => 'application/json' }
+
+        patch "/api/v1/items/#{id + 1}", headers: headers, params: JSON.generate(item: item_params)
+
+        expect(response.status).to eq(404)
       end
     end
 
@@ -159,7 +201,16 @@ RSpec.describe "Items", type: :request do
         expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
       end
 
-      xit 'has a sad path' do
+      it 'has a sad path' do
+        merchant_id = create(:merchant).id
+        id = create(:item, merchant_id: merchant_id).id
+        item_params = { "name": "patched name" }
+
+        headers = { "CONTENT_TYPE" => 'application/json' }
+
+        delete "/api/v1/items/#{id + 1}", headers: headers, params: JSON.generate(item: item_params)
+
+        expect(response.status).to eq(404)
       end
 
       xit 'destroys any invoice if this was the only item on the invoice' do
