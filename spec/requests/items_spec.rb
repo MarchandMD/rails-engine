@@ -184,6 +184,7 @@ RSpec.describe "Items", type: :request do
         patch "/api/v1/items/#{id + 1}", headers: headers, params: JSON.generate(item: item_params)
 
         expect(response.status).to eq(404)
+        expect(response.message).to eq("Not Found")
       end
     end
 
@@ -214,6 +215,7 @@ RSpec.describe "Items", type: :request do
       end
 
       xit 'destroys any invoice if this was the only item on the invoice' do
+        # possible all SQL method to bypass lack of relationships and ActiveRecord
       end
     end
   end
@@ -237,7 +239,7 @@ RSpec.describe "Items", type: :request do
   end
 
   describe 'non-RESTful endpoint' do
-    it 'can find all based on search criteria' do
+    it 'can find all based on name search criteria' do
       id = create(:merchant).id
       id2 = create(:merchant).id
       ring_of_gold = create(:item, name: 'Ring of Gold', merchant_id: id)
@@ -293,5 +295,59 @@ RSpec.describe "Items", type: :request do
       expect(items[:data][1][:attributes]).to have_key(:merchant_id)
       expect(items[:data][1][:attributes][:merchant_id]).to eq(silver_ring.merchant_id)
     end
+
+    context 'can allow the user to send one or more price-related query parameters' do
+      context 'min-price' do
+        describe 'happy path' do
+          it 'returns a single item >= min-price param' do
+            merchant_id = create(:merchant).id
+            item1 = create(:item, unit_price: 50, merchant_id: merchant_id)
+            item2 = create(:item, unit_price: 51, merchant_id: merchant_id)
+            item3 = create(:item, unit_price: 49, merchant_id: merchant_id)
+
+            get "/api/v1/items/find?min_price=50"
+            min_priced_item = JSON.parse(response.body, symbolize_names: true)
+
+            expect(min_priced_item).to have_key(:data)
+            expect(min_priced_item[:data]).to have_key(:id)
+            expect(min_priced_item[:data][:id]).to eq("#{item1.id}")
+
+            expect(min_priced_item[:data]).to have_key(:type)
+            expect(min_priced_item[:data][:type]).to eq("item")
+
+            expect(min_priced_item[:data]).to have_key(:attributes)
+
+            expect(min_priced_item[:data][:attributes]).to have_key(:name)
+            expect(min_priced_item[:data][:attributes][:name]).to eq("#{item1.name}")
+
+            expect(min_priced_item[:data][:attributes]).to have_key(:description)
+            expect(min_priced_item[:data][:attributes][:description]).to eq("#{item1.description}")
+
+            expect(min_priced_item[:data][:attributes]).to have_key(:unit_price)
+            expect(min_priced_item[:data][:attributes][:unit_price]).to eq(item1.unit_price)
+
+            expect(min_priced_item[:data][:attributes]).to have_key(:merchant_id)
+            expect(min_priced_item[:data][:attributes][:merchant_id]).to eq(merchant_id)
+          end
+        end
+
+        describe 'sad path' do
+          it 'returns 400 when min_price < 0' do
+            merchant_id = create(:merchant).id
+            item1 = create(:item, merchant_id: merchant_id)
+
+            get "/api/v1/items/find?min_price=0"
+
+            no_items = JSON.parse(response.body, symbolize_names: true)
+
+          end
+        end
+
+
+      end
+
+
+    end
+
   end
 end
