@@ -52,9 +52,7 @@ RSpec.describe 'Merchants', type: :request do
       expect(merchants[:data]).to be_an Array
     end
 
-    xit 'does not include data about merchant items or invoices' do
-    end
-
+    
     it 'can get a single merchant' do
       id = create(:merchant).id
 

@@ -61,3 +61,5 @@ gem "jsonapi-serializer", "~> 2.2"
 gem "pry-rails", "~> 0.3.9"
 
 gem "nokogiri", "~> 1.13"
+
+gem "loofah", "~> 2.19"
